@@ -1,0 +1,24 @@
+{application, jose,
+  [{description, "JOSE producer and consumer in Erlang."},
+    {vsn, "git"},
+    {registered, []},
+    {mod, {jose_app, []}},
+    {applications,
+      [kernel,
+        stdlib,
+        crypto,
+        public_key,
+        uri,
+        json,
+        b64,
+        ssl,
+        inets,
+        et,
+        sqlite
+      ]},
+    {env,[]},
+    {modules, []},
+
+    {licenses, ["ISC"]},
+    {links, []}
+  ]}.
