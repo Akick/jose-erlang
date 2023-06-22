@@ -72,17 +72,17 @@ to_curve(?ES384) -> secp384r1;
 to_curve(?ES512) -> secp521r1.
 
 -spec sign(jsx:json_text(), alg(), iodata()) -> binary().
-sign(Input, ?HS256, Key) -> crypto:hmac(sha256, Key, Input);
-sign(Input, ?HS384, Key) -> crypto:hmac(sha384, Key, Input);
-sign(Input, ?HS512, Key) -> crypto:hmac(sha512, Key, Input);
+sign(Input, ?HS256, Key) -> crypto:mac(hmac, sha256, Key, Input);
+sign(Input, ?HS384, Key) -> crypto:mac(hmac, sha384, Key, Input);
+sign(Input, ?HS512, Key) -> crypto:mac(hmac, sha512, Key, Input);
 sign(Input, ?ES256, Key) -> parse_asn1der_ecdsa_sign(crypto:sign(ecdsa, sha256, Input, [Key, secp256r1]), 256);
 sign(Input, ?ES384, Key) -> parse_asn1der_ecdsa_sign(crypto:sign(ecdsa, sha384, Input, [Key, secp384r1]), 384);
 sign(Input, ?ES512, Key) -> parse_asn1der_ecdsa_sign(crypto:sign(ecdsa, sha512, Input, [Key, secp521r1]), 528).
 
 -spec verify(jsx:json_text(), binary(), alg(), iodata()) -> boolean().
-verify(Input, Sign, ?HS256, Key) -> Sign =:= crypto:hmac(sha256, Key, Input);
-verify(Input, Sign, ?HS384, Key) -> Sign =:= crypto:hmac(sha384, Key, Input);
-verify(Input, Sign, ?HS512, Key) -> Sign =:= crypto:hmac(sha512, Key, Input);
+verify(Input, Sign, ?HS256, Key) -> Sign =:= crypto:mac(hmac, sha256, Key, Input);
+verify(Input, Sign, ?HS384, Key) -> Sign =:= crypto:mac(hmac, sha384, Key, Input);
+verify(Input, Sign, ?HS512, Key) -> Sign =:= crypto:mac(hmac, sha512, Key, Input);
 verify(Input, Sign, ?ES256, Key) -> crypto:verify(ecdsa, sha256, Input, asn1der_ecdsa_sign(Sign, 256), [Key, secp256r1]);
 verify(Input, Sign, ?ES384, Key) -> crypto:verify(ecdsa, sha384, Input, asn1der_ecdsa_sign(Sign, 384), [Key, secp384r1]);
 verify(Input, Sign, ?ES512, Key) -> crypto:verify(ecdsa, sha512, Input, asn1der_ecdsa_sign(Sign, 528), [Key, secp521r1]).
@@ -129,7 +129,7 @@ parse_asn1der_ecdsa_sign(Val, Size) ->
 	#'ECDSA-Sig-Value'{r = R, s = S} = public_key:der_decode('ECDSA-Sig-Value', Val),
 	<<R:Size, S:Size>>.
 
--spec asn1der_public_key(alg(), iodata()) -> any(). 
+-spec asn1der_public_key(alg(), iodata()) -> any().
 asn1der_public_key(<<"ES", _/bits>> = Alg, Key) -> {#'ECPoint'{point = Key}, asn1der_key_parameters(Alg)};
 asn1der_public_key(Alg, _Key)                   -> error({unsupported_public_key, Alg}).
 
@@ -140,7 +140,7 @@ asn1der_private_key(Alg, _Key)                   -> error({unsupported_private_k
 -spec parse_asn1der_key(any()) -> {alg(), binary()}.
 parse_asn1der_key({#'ECPoint'{point = Point}, Params})                    -> {parse_asn1der_key_parameters(Params), Point};
 parse_asn1der_key(#'ECPrivateKey'{privateKey = Key, parameters = Params}) -> {parse_asn1der_key_parameters(Params), Key};
-parse_asn1der_key(DerItem)                                                -> error({bad_asn1der, DerItem}). 
+parse_asn1der_key(DerItem)                                                -> error({bad_asn1der, DerItem}).
 
 -spec asn1der_key_parameters(alg()) -> any().
 asn1der_key_parameters(<<"ES", _/bits>> = Alg) -> {namedCurve, pubkey_cert_records:namedCurves(to_curve(Alg))};
